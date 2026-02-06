@@ -1,12 +1,26 @@
 name: Build APK
-on: [push]
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual trigger
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
     - name: Build APK
-      uses: sayyid5416/pwabuilder@v1.0.0
+      uses: Tanmoy741127/pwa2apk@v1.3.6
       with:
         url: "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
-        package: "apk"
+        name: "Epic Adventure RPG"
+        package: "com.epic.rpg"
+        icon: "https://img.icons8.com/color/512/000000/sword.png"
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: epic-rpg-apk
+        path: ./*.apk
