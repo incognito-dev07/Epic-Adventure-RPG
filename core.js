@@ -1,5 +1,5 @@
 // =====================
-// INITIALIZATION & CORE SYSTEMS
+// INITIALIZATION
 // =====================
 
 // DOM ELEMENTS
@@ -31,7 +31,7 @@ const loadingMsg2 = document.getElementById("loadingMsg2");
 const loadingMsg3 = document.getElementById("loadingMsg3");
 const exitContainer = document.getElementById("exitPopup");
 
-// GLOBAL VARIABLES
+//GLOBAL VARIABLES
 let currentSaveSlot = 1;
 let activePotionEffects = {
     Attack: { active: false, multiplier: 1, duration: 0 },
@@ -42,7 +42,8 @@ let currentMusic = null;
 let backgroundMusicPosition = 0;
 let battleMusicPosition = 0;
 
-// AUDIO FUNCTIONS
+
+//AUDIO FUNCTIONS
 function playBattleMusic() {
   if (!player.audioSettings.musicEnabled) return;
   if (currentMusic === 'battle') return; 
@@ -81,7 +82,13 @@ function stopAllMusic() {
   currentMusic = null;
 }
 
-// SAVE AND LOAD GAME
+
+
+// =====================
+// CORE GAME SYSTEM
+// =====================
+
+//SAVE AND LOAD GAME
 function saveGame(slot = currentSaveSlot) {
   localStorage.setItem(`epic_RPGv1_save_slot_${slot}`, JSON.stringify(player));
 }
@@ -192,7 +199,8 @@ function clearSave(slot = 1) {
   showLoadMenu();
 }
 
-// PLAYER MANAGEMENT
+
+//PLAYER MANAGEMENT
 function initializePlayerStats() {
   if (!player.stats) {
     player.stats = {
@@ -453,414 +461,742 @@ function unequipItem(type) {
   showInventory();
 }
 
-// UI/UX HELPERS
-function log(text, isBold = false) {
-  const line = document.createElement("p");
-  line.innerHTML = isBold ? `${text}` : text;
-  output.appendChild(line);
-  output.scrollBottom = output.scrollHeight;
-}
 
-function clearOutput() { 
-  output.textContent = ""; 
-}
-
-function addAction(text, handler) { controls.appendChild(createButton(text, handler)); 
-}
-
-function createButton(text, handler) {
-  const btn = document.createElement("button");
-  btn.textContent = text;
-  btn.onclick = () => { 
-    clearOutput(); 
-    controls.innerHTML = ""; 
-    handler(); 
-  };
-  return btn;
-}
-
-function addSidebarButton(text, handler) {
-  const btn = document.createElement("button");
-  btn.className = "sidebar-btn";
-  btn.textContent = text;
-  btn.onclick = handler;
-  document.getElementById("sidebar").appendChild(btn);
-}
-
-// SIDEBAR FUNCTIONS
-function openSidebar() {
-  document.getElementById("sidebar").style.left = "0px";
-}
-function closeSidebar() {
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    sidebar.style.left = "-240px";
+//LOCATION AND TRAVEL SYSTEM
+function showLocation() {
+  clearOutput();
+  controls.innerHTML = "";
+  updateMiniMap();
+  log(`📍 You are in ${player.location}`, true);
+  updateStats();
+  function talkToNPC(npc, lines) {
+    clearOutput();
+    controls.innerHTML = "";
+    let i = 0;
+    function next() {
+      if (i < lines.length) {
+        log(`${npc}: "${lines[i++]}"`);
+        controls.innerHTML = "";
+        addAction("Next", next);
+      } 
+      else showLocation();
+    }
+    next();
   }
-}
-function isInCombat() {
-  return enemyHealthBar.style.display === "block" && enemyHealthBar.style.display !== "none";
-}
-function openAchievementsFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot open achievements during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showAchievements, 300);
-}
-function openDailyChallengeFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot open daily challenges during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showDailyChallenge, 300);
-}
-function openQuestsFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot open quests during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showQuests, 300);
-}
-function openInventoryFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot open inventory during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showInventory, 300);
-}
-function openSkillsFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot open skills during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showSkills, 300);
-}
-function showCompanionsFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot manage companions during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showCompanions, 300);
-}
-function showBestiaryFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot open bestiary during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showBestiary, 300);
-}
-function openPrestigeFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot prestige during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showPrestigeMenu, 300);
-}
-function openAudioFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot open audio during combat!",true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showAudioSettings, 300);
-}
-function openCreditsFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot open daily credit during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showCredits, 300);
-}
-function openTutorialFromSidebar() {
-  if (isInCombat()) {
-    log("❌ Cannot tutorial during combat!", true);
-    return;
-  }
-  closeSidebar();
-  setTimeout(showTutorial, 300);
-}
-function openExitFromSidebar() {
-  exitContainer.style.display = "block";
-}
-function confirmExit() {
-  exitContainer.style.display = "none";
-  enemyHealthBar.style.display = "none";
-  document.getElementById("stats").classList.add("hidden");
-  sidebarToggle.style.display = "none";
-  closeSidebar();
-  setTimeout(mainMenu, 300);
-}
-function cancelExit() {
-  exitContainer.style.display = "none";
-}
-
-// ITEM POP-UP
-function showItemDetails(itemName) {
-  const details = shopItems[itemName];
-  if (!details) {
-    log(`❌ No information available for ${itemName}`, true);
-    return;
-  }
-  const popup = document.getElementById("item-popup");
-  const title = document.getElementById("item-popup-title");
-  const detailsDiv = document.getElementById("item-popup-details");
-  const closeBtn = document.getElementById("item-popup-close");
-  title.textContent = itemName;
-  let html = `
-    <div style="font-size: 8vmin; text-align: center; margin: 2vmin 0;">${details.icon || "📦"}</div>
-    <div class="item-description">${getItemDescription(details)}</div>
-  `;
-  html += `
-    <div class="item-detail-row">
-      <span class="item-detail-label">Category: ${details.category}</span>
-    </div>
-  `;
-  if (details.bonus) {
-    for (const stat in details.bonus) {
-      html += `
-        <div class="item-detail-row">
-          <span class="item-detail-label">${stat}: +${details.bonus[stat]}</span>
-        </div>
-      `;
+  const explorationCooldown = player.minigameCooldowns.exploration;
+  const now = Date.now();
+  const canExplore = !explorationCooldown || now >= explorationCooldown;
+  const npcsInLocation = new Set();
+  for (const questId in quests) {
+    const questData = quests[questId];
+    if (questData.location === player.location) {
+      npcsInLocation.add(questData.npc);
     }
   }
-  if (details.special) {
-    html += `
-      <div class="item-detail-row">
-        <span class="item-detail-label">Special: ${details.special} (${details.value || 'Active'})</span>
-      </div>
-    `;
+  switch (player.location) {
+    case "Village":
+      npcsInLocation.forEach(npcName => {
+        let questMarker = "";
+        if (Object.keys(player.quests).some(id => quests[id].npc === npcName && player.quests[id].status === 'READY_TO_COMPLETE')) questMarker = " (❗️)";
+        else if (Object.keys(player.quests).some(id => quests[id].npc === npcName && player.quests[id].status === 'AVAILABLE')) questMarker = " (❓)";
+        addAction(`Talk to ${npcName}${questMarker}`, () => handleNPCInteraction(npcName));
+      });
+      addAction("🔨 Visit Blacksmith", () => travelTo("Blacksmith's Forge"));
+      addAction("🏡 Go Home", () => travelTo("Player Home"));
+      addAction("🌍 Travel", showTravelMenu);
+      addAction("🏪 Shop", () => shopMenu());
+      break;
+    case "Forest":
+    case "Cave":
+    case "Mountain":
+    case "River":
+    case "Ice Mine":
+    case "Mystic Forest":
+    case "Sunken Grotto":
+    case "Ancient Ruins":
+      npcsInLocation.forEach(npcName => {
+        let questMarker = "";
+        if (Object.keys(player.quests).some(id => quests[id].npc === npcName && player.quests[id].status === 'READY_TO_COMPLETE')) questMarker = " (❗️)";
+        else if (Object.keys(player.quests).some(id => quests[id].npc === npcName && player.quests[id].status === 'AVAILABLE')) questMarker = " (❓)";
+        addAction(`Talk to ${npcName}${questMarker}`, () => handleNPCInteraction(npcName));
+      });
+      if (player.location === "Cave" && player.inventory["Iron Pickaxe"]) {
+        const cooldown = player.minigameCooldowns.mining;
+        const now = Date.now();
+        if (!cooldown || now >= cooldown) {
+          addAction("Go Mining ⛏️", () => startMiningMinigame());
+        } 
+        else {
+          const remaining = Math.ceil((cooldown - now) / 1000);
+          log(`Mining is on cooldown for ${remaining} seconds.`, true);
+        }
+      }
+      if (player.location === "River" && player.inventory["Fisherman's Net"]) {
+        const cooldown = player.minigameCooldowns.fishing;
+        const now = Date.now();
+        if (!cooldown || now >= cooldown) {
+          addAction("Go Fishing 🎣", () => startFishingMinigame());
+        } 
+        else {
+          const remaining = Math.ceil((cooldown - now) / 1000);
+          log(`Fishing is on cooldown for ${remaining} seconds.`, true);
+        }
+      }
+      const explorationCooldown = player.minigameCooldowns.exploration;
+      const now = Date.now();
+      const canExplore = !explorationCooldown || now >= explorationCooldown;
+      const exploreContainer = document.createElement("div");
+      exploreContainer.style.display = "flex";
+      exploreContainer.style.gap = "3vmin";
+      exploreContainer.id = "explore-container";
+      const exploreBtn = document.createElement("button");
+      exploreBtn.textContent = canExplore ? `Explore ${player.location}` : `Explore (${Math.ceil((explorationCooldown - now) / 1000)}s🔒)`;
+      exploreBtn.disabled = !canExplore;
+      exploreBtn.onclick = () => startExploration();
+      const trapBtn = document.createElement("button");
+      trapBtn.textContent = canExplore ? `Set Trap 🪤` : `Set Trap (${Math.ceil((explorationCooldown - now) / 1000)}s🔒)`;
+      trapBtn.disabled = !canExplore;
+      trapBtn.onclick = () => {
+        if (!canExplore) {
+          const remaining = Math.ceil((explorationCooldown - now) / 1000);
+          log(`❌ Exploration is on cooldown for ${remaining} seconds. You can't set a trap now.`, true);
+          return;
+        }
+        const trapKitCount = player.inventory["Trap Kit"] || 0;
+        if (trapKitCount < 1) {
+          clearOutput();
+          controls.innerHTML = "";
+          log("❌ You need a Trap Kit to set a trap! Buy one from the shop.", true);
+          addAction("Continue Without Trap", () => {
+            player.explorationData = { wave: 1, loot: {}, gold: 0, exp: 0, trapSet: false };
+            proceedExploration();
+          });
+          addAction("Go to Shop", () => shopMenu());
+          return;
+        }
+        clearOutput();
+        controls.innerHTML = "";
+        log(`🪤 You prepare to set a trap before exploring ${player.location}.`, true);
+        log("A trap will weaken the first enemy you encounter.", true);
+        addAction("Explore With Trap", () => {
+          player.inventory["Trap Kit"]--;
+          if (player.inventory["Trap Kit"] <= 0) delete player.inventory["Trap Kit"];
+          player.explorationData = { wave: 1, loot: {}, gold: 0, exp: 0, trapSet: true };
+          saveGame();
+          proceedExploration();
+        });
+        addAction("Explore Without Trap", () => {
+          player.explorationData = { wave: 1, loot: {}, gold: 0, exp: 0, trapSet: false };
+          proceedExploration();
+        });
+        addAction("Cancel", showLocation);
+      };
+
+      exploreContainer.appendChild(exploreBtn);
+      exploreContainer.appendChild(trapBtn);
+      controls.appendChild(exploreContainer);
+      if (!canExplore) {
+        startCooldownTimer();
+      }
+      addAction("🌍Travel", showTravelMenu);
+      break;
+
+      function startCooldownTimer() {
+        const exploreContainer = document.getElementById("explore-container");
+        if (!exploreContainer) return;
+        function updateCooldown() {
+          const now = Date.now();
+          const explorationCooldown = player.minigameCooldowns.exploration;
+          if (!explorationCooldown || now >= explorationCooldown) {
+            const exploreBtn = exploreContainer.querySelector('button:first-child');
+            const trapBtn = exploreContainer.querySelector('button:last-child');
+            if (exploreBtn) {
+              exploreBtn.textContent = `Explore ${player.location}`;
+              exploreBtn.disabled = false;
+              exploreBtn.onclick = () => startExploration();
+            }
+            if (trapBtn) {
+              trapBtn.textContent = `Set Trap 🪤`;
+              trapBtn.disabled = false;
+              trapBtn.onclick = () => {
+                clearOutput();
+                controls.innerHTML = "";
+                if (!player.inventory["Trap Kit"] || player.inventory["Trap Kit"] < 1) {
+                    log("❌ You need a Trap Kit to set a trap! Buy one from the shop.", true);
+                    addAction("Continue Without Trap", () => {
+                      player.explorationData = { wave: 1, loot: {}, gold: 0, exp: 0, trapSet: false };            proceedExploration();
+                    });
+                    addAction("Go to Shop", () => shopMenu());
+                    return;
+                }
+                log(`🪤 You prepare to set a trap before exploring ${player.location}.`, true);
+                log("A trap will weaken the first enemy you encounter.", true);
+                addAction("Explore With Trap", () => {
+                  player.inventory["Trap Kit"]--;
+                  if (player.inventory["Trap Kit"] <= 0) delete player.inventory["Trap Kit"];
+                  player.explorationData = { wave: 1, loot: {}, gold: 0, exp: 0, trapSet: true };
+                  saveGame();
+                  proceedExploration();
+                });
+                addAction("Explore Without Trap", () => {
+                  player.explorationData = { wave: 1, loot: {}, gold: 0, exp: 0, trapSet: false };              
+                  proceedExploration();
+                });
+                addAction("Cancel", showLocation);
+              };
+            }
+            return;
+          }
+          const remaining = Math.ceil((explorationCooldown - now) / 1000);
+          const exploreBtn = exploreContainer.querySelector('button:first-child');
+          const trapBtn = exploreContainer.querySelector('button:last-child');
+          if (exploreBtn) {
+            exploreBtn.textContent = `Explore (${remaining}s🔒)`;
+            exploreBtn.disabled = true;
+          }
+          if (trapBtn) {
+            trapBtn.textContent = `Set Trap (${remaining}s🔒)`;
+            trapBtn.disabled = true;
+          }
+          setTimeout(updateCooldown, 1000);
+        }
+        updateCooldown();
+      }
+    case "Infinite Dungeon":
+      showInfiniteDungeon();
+      break;
+    case "Blacksmith's Forge":
+      addAction("Talk to Blacksmith", () => talkToNPC("Blacksmith", ["I can craft powerful gear for you, but you'll need the right materials.", "Bring me the materials and I can try to forge something new."]));
+      addAction("Craft an Item", showCraftingMenu);
+      addAction("⬅️ Back", () => travelTo("Village"));
+      break;
+    case "Player Home":
+      addAction("Rest", () => {
+        player.health = player.MaxHealth + player.bonusMaxHealth;
+        player.Mana = player.maxMana + player.bonusMana;
+        log("🏡 You rest in the comfort of your own home, fully healed and refreshed!", true);
+        updateStatBars();
+        saveGame();
+        showLocation();
+      });
+      addAction("Decorate", () => {
+        log("This feature is still under construction.", true); 
+        showLocation(); 
+      });
+      addAction("⬅️ Back", () => travelTo("Village"));
+      break;
   }
-  if (details.heal) {
-    html += `
-      <div class="item-detail-row">
-        <span class="item-detail-label">Heals: ${details.heal} HP</span>
-      </div>
-    `;
+}
+
+function travelTo(newLocation) {
+  if (!player.stats) initializePlayerStats();
+  if (!player.stats.locationsVisited) {
+    player.stats.locationsVisited = ["Village"];
   }
-  if (details.effect) {
-    html += `
-      <div class="item-detail-row">
-        <span class="item-detail-label">Effect: ${details.effect.stat} +${((details.effect.modifier) * 100).toFixed(0)}% for ${details.effect.duration} turns</span>
-      </div>
-    `;
+  if (!player.stats.locationsVisited.includes(newLocation)) {
+    player.stats.locationsVisited.push(newLocation);
   }
-  if (details.price > 0) {
-    html += `
-      <div class="item-detail-row">
-        <span class="item-detail-label">Shop Price: ${details.price}g</span>
-      </div>
-    `;
+  const safeLocations = ["Village", "Blacksmith's Forge", "Player Home"];
+  const shouldTriggerEvent = Math.random() < 0.3 && !safeLocations.includes(newLocation);
+  if (shouldTriggerEvent) {
+    player.location = newLocation;
+    const eventTriggered = triggerTravelEvent();
+    if (!eventTriggered) {
+      saveGame();
+      showLocation();
+    }
+  } 
+  else {
+    player.location = newLocation;
+    saveGame();
+    showLocation();
   }
-  if (details.nonSellable) {
-    html += `<div class="item-detail-row"><span class="item-special-effect">Cannot Be Sold</span></div>`;
-  }
-  if (details.unique) {
-    html += `<div class="item-detail-row"><span class="item-special-effect">Unique Item</span></div>`;
-  }
-  detailsDiv.innerHTML = html;
-  closeBtn.onclick = () => {
+}
+
+function showTravelMenu() {
+  const popup = document.getElementById("travel-popup");
+  const optionsDiv = document.getElementById("travel-options");
+  const closeBtn = document.getElementById("travel-close");
+  optionsDiv.innerHTML = "";
+  locations.forEach(loc => {
+    if (loc === "Infinite Dungeon") {
+      const isUnlocked = player.level >= infiniteDungeon.minLevel;
+      const isLocked = !isUnlocked;
+      let questMarker = "";
+      for (const questId in player.quests) {
+        const quest = player.quests[questId];
+        const questData = quests[questId];
+        if (!quest || !questData) continue;
+        if (questData.location === loc) {
+          if (quest.status === "READY_TO_COMPLETE") questMarker = " ❗";
+          else if (quest.status === "AVAILABLE") questMarker = " ❓";
+        }
+      }
+      const btn = document.createElement("button");
+      btn.textContent = isLocked ? 
+        `${loc} (Requires Level ${infiniteDungeon.minLevel})` : 
+        `${loc}${questMarker}`;
+      btn.disabled = isLocked;
+      btn.onclick = () => {
+        if (!isLocked) {
+          travelTo(loc);
+          popup.classList.add("hidden");
+        }
+      };
+      optionsDiv.appendChild(btn);
+    } 
+    else {
+    const isLocked = (loc === "Mystic Forest" && !player.inventory["Treant Bark Map"]) || (loc === "Sunken Grotto" && !player.inventory["Coral Fragment Map"]) || (loc === "Ancient Ruins" && !player.inventory["Ancient Relic Map"]);
+    let questMarker = "";
+    for (const questId in player.quests) {
+      const quest = player.quests[questId];
+      const questData = quests[questId];
+      if (!quest || !questData) continue;
+      if (questData.location === loc) {
+        if (quest.status === "READY_TO_COMPLETE") questMarker = " ❗";
+        else if (quest.status === "AVAILABLE") questMarker = " ❓";
+      }
+    }
+    const btn = document.createElement("button");
+    btn.textContent = isLocked ? `${loc} (🔒)` : `${loc}${questMarker}`;
+    btn.disabled = isLocked;
+    btn.onclick = () => {
+      if (!isLocked) {
+        travelTo(loc);
+        popup.classList.add("hidden");
+      }
+    };
+    optionsDiv.appendChild(btn);
+    }
+  });
+  closeBtn.addEventListener("click",()=>{
     popup.classList.add("hidden");
-  };
+    showLocation();
+  })
   popup.classList.remove("hidden");
 }
 
-function getItemDescription(details) {
-  if (details.description) return details.description;
-  switch (details.type) {
-    case "weapon":
-      return `A powerful weapon that increases your combat effectiveness.`;
-    case "armor":
-      return `Protective gear that enhances your survivability in battle.`;
-    case "accessory":
-      return `A magical item that provides special bonuses.`;
-    case "consumable":
-      if (details.heal && details.Mana) return `Restores both health and Mana.`;
-      if (details.heal) return `Restores health during combat.`;
-      if (details.Mana) return `Restores Mana for using skills.`;
-      if (details.effect) return `Temporarily enhances your abilities.`;
-      return `A useful consumable item.`;
-    case "material":
-      return `A crafting material used to create better equipment.`;
-    case "sellable":
-      return `Valuable loot that can be sold for gold.`;
-    case "unique":
-      return `A rare and powerful artifact with special properties.`;
-    default:
-      return `A mysterious item with unknown properties.`;
+function updateMiniMap() {
+  miniMap.innerHTML = "";
+  locations.forEach(loc => {
+    const node = document.createElement("div");
+    node.classList.add("map-node");
+    if (loc === player.location) node.classList.add("map-current");
+    node.textContent = loc;
+    miniMap.appendChild(node);
+  });
+}
+
+
+function triggerTravelEvent() {
+  const eventRoll = Math.random();
+  const events = Object.values(travelEvents);
+  const validEvents = events.filter(event => 
+    event && 
+    event.name && 
+    event.description && 
+    event.type && 
+    event.chance !== undefined
+  );
+  if (validEvents.length === 0) {
+    console.log("No valid travel events found");
+    return false;
   }
+  let totalChance = validEvents.reduce((sum, event) => sum + event.chance, 0);
+  let accumulatedChance = 0;
+  const normalizedEvents = validEvents.map(event => ({
+    ...event,
+    normalizedChance: event.chance / totalChance
+  }));
+  for (const event of normalizedEvents) {
+    accumulatedChance += event.normalizedChance;
+    if (eventRoll <= accumulatedChance) {
+      handleTravelEvent(event);
+      return true;
+    }
+  }
+  console.log("No travel event triggered, continuing normally");
+  return false;
 }
 
-function closeItemPopup() {
-  document.getElementById("item-popup").classList.add("hidden");
-}
-
-// GAME FLOW - MAIN MENU
-function mainMenu() {
+function handleTravelEvent(event) {
   clearOutput();
   controls.innerHTML = "";
-  miniMap.innerHTML = "";
-  log("🏰 Welcome to Epic RPG Adventure!\n\nThis is a classic text-based RPG where you can choose your class, embark on quests, fight monsters, and explore various locations.\n\nGood luck, adventurer!");
-  addAction("Start New Game", startNewGame);
-  addAction("Load Game", showLoadMenu);
-}
-
-// GAME START/LOAD
-function startNewGame() {
-  let emptySlot = null;
-  for(let i = 1; i <= 3; i++) {
-    if (!localStorage.getItem(`epic_RPGv1_save_slot_${i}`)) {
-      emptySlot = i;
-      break;
-    }
-  }
-  player = {
-    name: "", class: "", health: 0, MaxHealth: 0, Mana: 0, maxMana: 0, Attack: 0, gold: 150,inventory: {"Mega Healing Potion": 3, "Trap Kit": 1}, 
-    equipped: { weapon: null, armor: null, accessory: null }, 
-    quests: {},location: "Village", level: 1, exp: 0, expToNextLevel: 400, skills: [], minigameCooldowns: {}, skillCooldowns: {}, permanentEffects: {},goldFind: 0, miniBossRespawn: {}, miniBossDefeats: {}, bossesDefeated: [],shopLevel: 1, bonusAttack: 0, bonusMaxHealth: 0, bonusMana: 0,explorationData: null,prestigeLevel: 0,prestigePoints: 0,
-    permanentBonuses: {
-      goldFind: 0,
-      expGain: 0,
-      damage: 0.05,
-      health: 0.05,
-      mana: 0.05
-    },
-    dailyChallenges: {
-      lastCheck: null,
-      completed: {},
-      current: null,
-      currentDate: null,
-      progress: 0
-    },
-    stats: {
-      enemiesDefeated: 0,
-      locationsVisited: ["Village"],
-      explorationsCompleted: 0,
-      itemsCrafted: 0,
-      totalGoldEarned: 150,
-      itemsPurchased: 0,
-      achievementsUnlocked: 0,
-      highestDungeonFloor: 0,
-      totalDungeonFloors: 0,
-      dungeonAttempts: 0
-    },
-    audioSettings: {
-      musicVolume: 0.5,
-      soundEffectsVolume: 0.7,
-      musicEnabled: true,
-      soundEffectsEnabled: true
-    }
-  };
-  if (emptySlot === null) {
-    log("❌ No empty save slots available. Please delete a game to start a new one.", true);
-    showLoadMenu();
+  if (!event || !event.name || !event.description || !event.type) {
+    log("The journey continues without incident.", true);
+    addAction("Continue", showLocation);
     return;
   }
-  QuestManager.initializeQuests();
-  chooseClass(emptySlot);
-}
-
-function showLoadMenu() {
-  clearOutput();
-  controls.innerHTML = "";
-  log("📂 Select a saved game slot:");
-  for (let i = 1; i <= 3; i++) {
-    const d = localStorage.getItem(`epic_RPGv1_save_slot_${i}`);
-        const saveState = d ? JSON.parse(d) : null;
-    const saveInfo = saveState ? `Slot ${i}: ${saveState.name} the ${saveState.class} (Lv ${saveState.level})` : `Slot ${i}: Empty`;
-      addAction(saveInfo, () => showSlotMenu(i, !!d));
-  }
-  addAction("⬅️ Back", mainMenu);
-}
-
-function chooseClass(slot) {
-  clearOutput();
-  controls.innerHTML = "";
-  log("Choose your class:");
-  for (let cls in CLASSES) {
-    controls.appendChild(createButton(cls, () => {
-      showPrompt((userName) => {
-      const base = CLASSES[cls];
-      player.class = cls;
-      player.MaxHealth = base.MaxHealth;
-      player.health = base.MaxHealth;
-      player.maxMana = base.maxMana;
-      player.Mana = base.maxMana;
-      player.Attack = base.Attack;
-      player.skills = [...base.skills];
-      player.name = userName || "Hero";
-      calculateStats();
-      updateStatBars();
-      document.getElementById("stats").classList.remove("hidden");
-      QuestManager.updateAllQuestStates();
-      updateStats();
-      currentSaveSlot = slot;
-      saveGame(slot);
-      document.getElementById("sidebar-toggle").style.display = "block";
-      showLocation();
-      })
-    }));
-  }
-}
-
-function showPrompt(callback){
-  const promptContainer = document.createElement("div");
-  promptContainer.className = "promptContainerDiv"
-  promptContainer.innerHTML = `
-  <p style="font-size: 5vmin">What is your name, adventurer?</p>
-  <input type="text" id="promptInput" placeholder="Hero">
-  <button class="okClick">Ok</button>
-  `;
-  document.body.appendChild(promptContainer);
-  const input = document.getElementById("promptInput");
-  input.focus();
-  document.querySelector(".okClick").onclick = () => {
-    const userName = input.value.trim();
-    document.body.removeChild(promptContainer);
-    callback(userName);
+  log(`🚩 ${event.name}`, true);
+  log(event.description, true);
+  const addDefaultContinue = () => {
+    addAction("Continue Journey", showLocation);
   };
+  try {
+    switch (event.type) {
+      case "combat":
+        if (event.enemy) {
+          log("Prepare for battle!", true);
+          addAction("Fight!", () => fightEnemy(event.enemy, "travel"));
+        } else {
+          log("The threat seems to have passed.", true);
+          addDefaultContinue();
+        }
+        break;
+      case "dialogue":
+        if (event.options && event.options.length > 0) {
+          event.options.forEach(option => {
+            if (option && option.text && option.outcome) {
+              addAction(option.text, () => {
+                clearOutput();
+                if (option.outcome.combat && option.outcome.enemy) {
+                  log("The stranger attacks!", true);
+                  fightEnemy(option.outcome.enemy, "travel");
+                } 
+                else {
+                  if (option.outcome.gold) addGold(option.outcome.gold, "Mysterious stranger");
+                  if (option.outcome.item) addItemToInventory(option.outcome.item, 1);
+                  log(option.outcome.message || "The encounter ends.", true);
+                  addAction("Continue Journey", showLocation);
+                }
+              });
+            }
+          });
+        } 
+        else {
+          log("The stranger has nothing more to say.", true);
+          addDefaultContinue();
+        }
+        break;
+      case "loot":
+        if (event.rewards) {
+          let totalGold = 0;
+          event.rewards.forEach(reward => {
+            if (reward.type === "gold") {
+              const goldAmount = Math.floor(Math.random() * (reward.max - reward.min + 1)) + reward.min;
+              totalGold += goldAmount;
+            } 
+            else if (reward.type === "item" && Math.random() < (reward.chance || 0.7)) {
+              const randomItem = reward.items[Math.floor(Math.random() * reward.items.length)];
+              addItemToInventory(randomItem, 1, { silent: true });
+              log(`🎁 Found: ${randomItem}`, true);
+            }
+          });
+          if (totalGold > 0) {
+            addGold(totalGold, "Treasure chest");
+          }
+          log("You take what you can carry and continue your journey.", true);
+        } else {
+          log("The chest was empty.", true);
+        }
+        addDefaultContinue();
+        break;
+      case "choice":
+        if (event.options && event.options.length > 0) {
+          event.options.forEach(option => {
+            if (option && option.text && option.outcome) {
+              addAction(option.text, () => {
+                clearOutput();
+                if (option.cost) {
+                  let canAfford = true;
+                  if (option.cost.item && (!player.inventory[option.cost.item] || player.inventory[option.cost.item] < option.cost.quantity)) {
+                    canAfford = false;
+                  }
+                  if (option.cost.gold && player.gold < option.cost.gold) {
+                    canAfford = false;
+                  }
+                  if (!canAfford) {
+                    log(`❌ You don't have the required resources!`, true);
+                    addAction("Continue", showLocation);
+                    return;
+                  }
+                  if (option.cost.item) {
+                    player.inventory[option.cost.item] -= option.cost.quantity;
+                    if (player.inventory[option.cost.item] <= 0) delete player.inventory[option.cost.item];
+                  }
+                  if (option.cost.gold) player.gold -= option.cost.gold;
+                }
+                if (option.outcome.reward) {
+                  if (option.outcome.reward.gold) addGold(option.outcome.reward.gold, "Good deed");
+                  if (option.outcome.reward.exp) gainExp(option.outcome.reward.exp);
+                  if (option.outcome.reward.item) addItemToInventory(option.outcome.reward.item, 1);
+                }
+                if (option.outcome.karma) {
+                  if (!player.karma) player.karma = 0;
+                  player.karma += option.outcome.karma;
+                  log(option.outcome.karma > 0 ? "✨ Your karma has improved!" : "💀 Your karma has worsened.", true);
+                }
+                log(option.outcome.message || "Your choice has consequences.", true);
+                addAction("Continue Journey", showLocation);
+              });
+            }
+          });
+        } else {
+          log("You decide to continue on your way.", true);
+          addDefaultContinue();
+        }
+        break;
+      case "interaction":
+        if (event.effects && event.effects.length > 0) {
+          event.effects.forEach(effect => {
+            if (effect && effect.text && effect.outcome) {
+              addAction(effect.text, () => {
+                clearOutput();
+                if (effect.cost) {
+                  if (effect.cost.gold && player.gold < effect.cost.gold) {
+                    log("❌ You don't have enough gold!", true);
+                    addAction("Continue", showLocation);
+                    return;
+                  }
+                  player.gold -= effect.cost.gold || 0;
+                }
+                if (effect.outcome.heal) {
+                  player.health = Math.min(player.MaxHealth + player.bonusMaxHealth, player.health + effect.outcome.heal);
+                  log(`💖 Healed ${effect.outcome.heal} HP!`, true);
+                }
+                if (effect.outcome.Mana) {
+                  player.Mana = Math.min(player.maxMana + player.bonusMana, player.Mana + effect.outcome.Mana);
+                  log(`🔵 Restored ${effect.outcome.Mana} MP!`, true);
+                }
+                log(effect.outcome.message || "The interaction is complete.", true);
+                addAction("Continue Journey", showLocation);
+              });
+            }
+          });
+        } else {
+          log("There's nothing more to do here.", true);
+          addDefaultContinue();
+        }
+        break;
+      default:
+        log("The journey continues without incident.", true);
+        addDefaultContinue();
+        break;
+    }
+  } catch (error) {
+    console.error("Error handling travel event:", error);
+    log("The journey continues without incident.", true);
+    addDefaultContinue();
+  }
 }
 
-// LOADING SCREEN
-loadingMsg1.style.animation = "show-and-hide 4s linear forwards";
-setTimeout(() => {
-  loadingMsg2.style.animation = "show-and-hide 5s linear forwards";
-}, 4000);
-setTimeout(() => {
-  loadingMsg3.style.animation = "show-only 5s linear forwards";
-}, 8900);
-setTimeout(() => {
-  loading.style.display = "none";
-  loader.style.border = "none";
-  loader.innerHTML = "<h3>Tap to skip!</h3>";
-  loader.style.animation = "blink 1s ease-out infinite";
-  loadscreen.addEventListener("click", () => {
-    playBackgroundMusic();
-    loadscreen.style.display = "none";
-    initializePlayerStats();
-    mainMenu();
-  });
-  setTimeout(() => {
-    if (loadscreen.style.display !== "none") {
-      playBackgroundMusic();
-      loadscreen.style.display = "none";
-      initializePlayerStats();
-      mainMenu();
+
+//QUEST SYSTEM
+const QuestManager = {
+  initializeQuests: function() {
+    if (!player.quests) {
+      player.quests = {};
     }
-  }, 20000);
-}, 5000);
+    for (const questId in quests) {
+      if (!player.quests[questId]) {
+        player.quests[questId] = { 
+          status: 'UNAVAILABLE', 
+          progress: 0 
+        };
+      }
+      const questData = quests[questId];
+      if (player.quests[questId].status === 'UNAVAILABLE' && questData.startCondition(player)) {
+        player.quests[questId].status = 'AVAILABLE';
+      }
+    }
+  },
+  updateAllQuestStates: function() {
+    for (const questId in quests) {
+      const questData = quests[questId];
+      let playerQuestState = player.quests[questId];
+      if (!playerQuestState) {
+        player.quests[questId] = { status: 'UNAVAILABLE', progress: 0 };
+        playerQuestState = player.quests[questId];
+      }
+      if (playerQuestState.status === 'UNAVAILABLE' && questData.startCondition(player)) {
+        playerQuestState.status = 'AVAILABLE';
+      }
+      if (playerQuestState.status === 'ACTIVE' && 
+          playerQuestState.progress >= questData.objective.amount) {
+        playerQuestState.status = 'READY_TO_COMPLETE';
+      }
+    }
+  },
+  updateQuestProgress: function(actionType, target, amount = 1) {
+    let questUpdated = false;
+    for (const questId in player.quests) {
+      const playerQuestState = player.quests[questId];
+      const questData = quests[questId];
+      if (!playerQuestState || !questData) continue;
+      if (playerQuestState.status === 'ACTIVE' && questData.objective.type === actionType && questData.objective.target === target) {
+        playerQuestState.progress = Math.min(questData.objective.amount, playerQuestState.progress + amount);
+        questUpdated = true;
+        log(`📜 Quest progress: ${questData.title} (${playerQuestState.progress}/${questData.objective.amount})`, true);
+        if (playerQuestState.progress >= questData.objective.amount) {
+          playerQuestState.status = 'READY_TO_COMPLETE';
+          log(`✅ Quest objective met for: ${questData.title}! Return to ${questData.npc}.`, true);
+        }
+      }
+    }
+    if (questUpdated) saveGame();
+    checkDailyChallengeProgress(actionType, target, amount);
+  },
+  syncQuestProgressFromInventory: function() {
+    let changed = false;
+    for (const questId in player.quests) {
+      const state = player.quests[questId];
+      const data = quests[questId];
+      if (!state || !data) continue;
+      if (state.status === 'ACTIVE' && data.objective?.type === 'COLLECT') {
+        const have = player.inventory[data.objective.target] || 0;
+        const newProg = Math.min(data.objective.amount, have);
+        if (state.progress !== newProg) {
+          state.progress = newProg;
+          changed = true;
+          if (newProg >= data.objective.amount) state.status = 'READY_TO_COMPLETE';
+          log(`📜 Quest synced: ${data.title} (${state.progress}/${data.objective.amount})`, true);
+        }
+      }
+    }
+    if (changed) saveGame();
+  },
+  startQuest: function(questId) {
+    if (player.quests[questId] && player.quests[questId].status === 'AVAILABLE') {
+      player.quests[questId].status = 'ACTIVE';
+      player.quests[questId].progress = 0;
+      clearOutput();
+      log(`📜 New Quest Accepted: ${quests[questId].title}`, true);
+      log(quests[questId].description);
+      if (quests[questId].objective.type === 'COLLECT') {
+        const have = player.inventory[quests[questId].objective.target] || 0;
+        player.quests[questId].progress = Math.min(quests[questId].objective.amount, have);
+        if (player.quests[questId].progress >= quests[questId].objective.amount) {
+          player.quests[questId].status = 'READY_TO_COMPLETE';
+          log(`✅ You already have the required items! Return to ${quests[questId].npc} to complete the quest.`, true);
+        }
+      }
+      saveGame();
+      showLocation();
+    }
+  },
+  completeQuest: function(questId) {
+    const playerQuestState = player.quests[questId];
+    const questData = quests[questId];
+    if (playerQuestState && playerQuestState.status === 'READY_TO_COMPLETE') {
+      clearOutput();
+      log(`🎉 Quest Complete: ${questData.title}`, true);
+      if (questData.dialogue && questData.dialogue.complete && questData.dialogue.complete[0]) {
+        log(`${questData.npc}: "${questData.dialogue.complete[0]}"`);
+      } 
+      else {
+        log(`${questData.npc}: "Thank you for your help!"`);
+      }
+      const reward = questData.reward;
+      if (reward.gold) {
+        addGold(reward.gold, "Quest reward");
+      }
+      if (reward.item && reward.item.includes("Companion")) {
+        const companionName = reward.item.replace(" Companion", "");
+        if (companions[companionName]) {
+          acquireCompanion(companionName);
+          log(`🎉 ${companionName} has joined your party!`, true);
+        } else {
+          acquireCompanion(reward.item);
+        }
+      } 
+      else if (reward.item) {
+      addItemToInventory(reward.item, 1);
+      }
+      if (reward.exp) {
+        gainExp(reward.exp);
+      }
+      playerQuestState.status = 'COMPLETED';
+      if (questData.followUpQuest) {
+        if (!player.quests[questData.followUpQuest]) {
+          player.quests[questData.followUpQuest] = { status: 'UNAVAILABLE', progress: 0 };
+        }
+        this.updateAllQuestStates();
+      }
+      saveGame();
+      updateStats();
+      checkAchievements();
+      addAction("Continue", showLocation);
+    }
+  }
+};
 
-initializeCompanionSystem();
-initializeCompanionCooldowns();
-
-// GAME START
-mainMenu();
+function handleNPCInteraction(npcName) {
+  clearOutput();
+  controls.innerHTML = "";
+  const npcQuests = Object.entries(quests)
+    .filter(([id, quest]) => quest.npc === npcName)
+    .map(([id, quest]) => ({ id, ...quest }))
+    .sort((a, b) => {
+      const statusOrder = { 'READY_TO_COMPLETE': 0, 'AVAILABLE': 1, 'ACTIVE': 2, 'COMPLETED': 3, 'UNAVAILABLE': 4 };
+      return statusOrder[player.quests[a.id]?.status] - statusOrder[player.quests[b.id]?.status];
+    });
+  const completableQuests = npcQuests.filter(quest => 
+    player.quests[quest.id]?.status === 'READY_TO_COMPLETE'
+    );
+  if (completableQuests.length > 0) {
+    const questData = completableQuests[0];
+    log(`${npcName}: "${questData.dialogue.complete[0] || 'You have done it! Thank you!'}"`);
+    if (completableQuests.length > 1) {
+      log("\nYou have multiple quests ready to complete:", true);
+      completableQuests.forEach((quest, index) => {
+        addAction(`Complete: ${quest.title}`, () => QuestManager.completeQuest(quest.id));
+      });
+      addAction("Nevermind", showLocation);
+    } 
+    else {
+      addAction(`Complete Quest: ${questData.title}`, () => QuestManager.completeQuest(completableQuests[0].id));
+      addAction("Nevermind", showLocation);
+    }
+    return;
+  }
+  const availableQuests = npcQuests.filter(quest => 
+    player.quests[quest.id]?.status === 'AVAILABLE'
+  );
+  if (availableQuests.length > 0) {
+    const questData = availableQuests[0];
+    log(`${npcName}: "${questData.dialogue.start[0] || 'I have a task for you.'}"`);
+    if(questData.dialogue.start[1]) log(`${npcName}: "${questData.dialogue.start[1]}"`);
+    if (availableQuests.length > 1) {
+      log("\nAvailable quests:", true);
+      availableQuests.forEach((quest, index) => {
+        addAction(`Accept: ${quest.title}`, () => QuestManager.startQuest(quest.id));
+      });
+      addAction("Decline", showLocation);
+    } 
+    else {
+      addAction(`Accept Quest: ${questData.title}`, () => QuestManager.startQuest(availableQuests[0].id));
+      addAction("Decline", showLocation);
+    }
+    return;
+  }
+  const activeQuests = npcQuests.filter(quest => 
+    player.quests[quest.id]?.status === 'ACTIVE'
+  );
+  if (activeQuests.length > 0) {
+    const questData = activeQuests[0];
+    const playerQuestState = player.quests[activeQuests[0].id];
+    log(`${npcName}: "${questData.dialogue.active[0] || 'Are you still working on that task?'}"`);
+    log(`(Your progress: ${playerQuestState.progress}/${questData.objective.amount})`);
+    if (activeQuests.length > 1) {
+      log("\nCurrent quest progress:", true);
+      activeQuests.forEach(quest => {
+        const state = player.quests[quest.id];
+        log(`- ${quest.title}: ${state.progress}/${quest.objective.amount}`);
+      });
+    }
+    addAction("Continue", showLocation);
+    return;
+  }
+  const defaultDialogues = { 
+    "Village Elder": "It is good to see you, hero. What guidance do you seek?",
+    "Hunter": "The woods are dangerous, but full of life. Keep your wits about you.",
+    "Miner": "Careful in those caves. It's dangerous work.",
+    "Dwarf Warrior": "Care for a drink? Oh, right. Nevermind.",
+    "Fisherman": "The river is calm today. Good for fishing.",
+    "Herbalist": "The forest provides many ingredients for my potions.",
+    "Blacksmith": "I can craft powerful gear if you bring me the right materials.",
+    "Mystic Sprite": "The forest whispers secrets to those who listen."
+  };
+  log(`${npcName}: "${defaultDialogues[npcName] || 'Greetings, traveler.'}"`);
+  addAction("Continue", showLocation);
+             }
